@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Presensi Online</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        .clock-display {
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
+  <div class="min-h-full flex flex-col items-center justify-center p-4"><!-- Header dengan Jam -->
+   <header class="text-center mb-8">
+    <h1 id="app-title" class="text-3xl font-bold text-gray-800 mb-2">Aplikasi Presensi Online</h1>
+    <p id="company-name" class="text-lg text-gray-600 mb-4">Hamalatul Qur'an</p>
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+     <div id="current-time" class="clock-display text-4xl font-bold mb-2" style="color: #e73180;"></div>
+     <div id="current-date" class="text-gray-600 text-lg"></div>
+    </div>
+   </header><!-- Form Presensi -->
+   <main class="w-full max-w-md">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+     <h2 class="text-xl font-semibold text-gray-800 mb-6 text-center">Form Presensi</h2>
+     <form id="attendance-form" class="space-y-6"><!-- Dropdown Nama -->
+      <div><label for="employee-name" class="block text-sm font-medium text-gray-700 mb-2">Nama Guru</label> <select id="employee-name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-2" style="focus:ring-color: #256cac; focus:border-color: #256cac;" required> <option value="">Pilih Nama</option> <option value="Bu Tika">Bu Tika</option> <option value="Bu Wifa">Bu Wifa</option> <option value="Bu Ros">Bu Ros</option> <option value="Bu Reni">Bu Reni</option> </select>
+      </div><!-- Radio Button Status -->
+      <div><label class="block text-sm font-medium text-gray-700 mb-3">Status Kehadiran</label>
+       <div class="space-y-2"><label class="flex items-center"> <input type="radio" name="attendance-status" value="Hadir" class="mr-3" style="accent-color: #256cac;"> <span class="text-gray-700">Hadir</span> </label> <label class="flex items-center"> <input type="radio" name="attendance-status" value="Sakit" class="mr-3" style="accent-color: #256cac;"> <span class="text-gray-700">Sakit</span> </label> <label class="flex items-center"> <input type="radio" name="attendance-status" value="Ijin" class="mr-3" style="accent-color: #256cac;"> <span class="text-gray-700">Ijin</span> </label>
+       </div>
+      </div><!-- Text Box Keterangan (Hidden by default) -->
+      <div id="reason-container" class="hidden"><label for="reason-text" class="block text-sm font-medium text-gray-700 mb-2">Keterangan Sakit/Ijin</label> <textarea id="reason-text" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-2" style="focus:ring-color: #256cac; focus:border-color: #256cac;" placeholder="Masukkan keterangan..."></textarea>
+      </div><!-- Tombol Lanjutkan --> <button type="submit" class="w-full text-white font-semibold py-3 px-4 rounded-lg transition duration-200" style="background-color: #256cac;" onmouseover="this.style.backgroundColor='#1e5a94'" onmouseout="this.style.backgroundColor='#256cac'"> Lanjutkan </button>
+     </form>
+    </div>
+   </main>
+  </div><!-- Modal Pop-up -->
+  <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden flex items-center justify-center p-4 z-50">
+   <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4 text-center">Konfirmasi Presensi</h3>
+    <div class="space-y-3 mb-6">
+     <div class="flex justify-between"><span class="font-medium text-gray-600">Nama:</span> <span id="modal-name" class="text-gray-800"></span>
+     </div>
+     <div class="flex justify-between"><span class="font-medium text-gray-600">Status:</span> <span id="modal-status" class="text-gray-800"></span>
+     </div>
+     <div class="flex justify-between"><span class="font-medium text-gray-600">Waktu:</span> <span id="modal-time" class="text-gray-800"></span>
+     </div>
+     <div class="flex justify-between"><span class="font-medium text-gray-600">Lokasi:</span> <span id="modal-location" class="text-gray-800 text-sm">Mengambil lokasi...</span>
+     </div>
+     <div id="modal-reason-container" class="hidden">
+      <div class="flex justify-between"><span class="font-medium text-gray-600">Keterangan:</span> <span id="modal-reason" class="text-gray-800"></span>
+      </div>
+     </div>
+     <div id="late-warning" class="hidden rounded-lg p-3" style="background-color: #fef2f2; border: 1px solid #e73180;">
+      <p class="font-medium mb-2" style="color: #e73180;">⚠️ Anda Terlambat, mohon isi Alasan</p><textarea id="late-reason" rows="2" class="w-full p-2 border rounded focus:ring-2 focus:border-2" style="border-color: #e73180; focus:ring-color: #e73180; focus:border-color: #e73180;" placeholder="Masukkan alasan keterlambatan..."></textarea>
+     </div>
+    </div>
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+     <p class="text-sm text-blue-800"><strong>Keterangan:</strong> Data Presensi akan diteruskan ke Google Form. Langsung Klik Selanjutnya dan Kirim tanpa mengedit data yang sudah terisi.</p>
+    </div>
+    <div class="flex space-x-3"><button id="cancel-btn" class="flex-1 text-white font-semibold py-2 px-4 rounded-lg transition duration-200" style="background-color: #e73180;" onmouseover="this.style.backgroundColor='#d12a73'" onmouseout="this.style.backgroundColor='#e73180'"> Batal </button> <button id="submit-btn" class="flex-1 text-white font-semibold py-2 px-4 rounded-lg transition duration-200" style="background-color: #256cac;" onmouseover="this.style.backgroundColor='#1e5a94'" onmouseout="this.style.backgroundColor='#256cac'"> Kirim </button>
+    </div>
+   </div>
+  </div>
+  <script>
+        // Konfigurasi default
+        const defaultConfig = {
+            app_title: "Aplikasi Presensi Online",
+            company_name: "PT. Contoh Perusahaan"
+        };
+
+        // Fungsi untuk memperbarui tampilan berdasarkan config
+        async function onConfigChange(config) {
+            document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+            document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
+        }
+
+        // Fungsi untuk mapping capabilities
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            };
+        }
+
+        // Fungsi untuk mapping edit panel values
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["app_title", config.app_title || defaultConfig.app_title],
+                ["company_name", config.company_name || defaultConfig.company_name]
+            ]);
+        }
+
+        // Inisialisasi Element SDK
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                onConfigChange,
+                mapToCapabilities,
+                mapToEditPanelValues
+            });
+        }
+
+        // Update jam real-time
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const dateString = now.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            document.getElementById('current-time').textContent = timeString;
+            document.getElementById('current-date').textContent = dateString;
+        }
+
+        // Update jam setiap detik
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Handle radio button changes
+        const radioButtons = document.querySelectorAll('input[name="attendance-status"]');
+        const reasonContainer = document.getElementById('reason-container');
+
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'Sakit' || this.value === 'Ijin') {
+                    reasonContainer.classList.remove('hidden');
+                    document.getElementById('reason-text').required = true;
+                } else {
+                    reasonContainer.classList.add('hidden');
+                    document.getElementById('reason-text').required = false;
+                    document.getElementById('reason-text').value = '';
+                }
+            });
+        });
+
+        // Handle form submission
+        document.getElementById('attendance-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('employee-name').value;
+            const status = document.querySelector('input[name="attendance-status"]:checked')?.value;
+            const reason = document.getElementById('reason-text').value;
+            
+            if (!name || !status) {
+                showToast('Mohon lengkapi semua field yang diperlukan', 'error');
+                return;
+            }
+            
+            if ((status === 'Sakit' || status === 'Ijin') && !reason.trim()) {
+                showToast('Mohon isi keterangan untuk status ' + status, 'error');
+                return;
+            }
+            
+            showConfirmationModal(name, status, reason);
+        });
+
+        // Fungsi untuk menampilkan modal konfirmasi
+        function showConfirmationModal(name, status, reason) {
+            const modal = document.getElementById('confirmation-modal');
+            const now = new Date();
+            const currentTime = now.toLocaleTimeString('id-ID');
+            
+            // Isi data ke modal
+            document.getElementById('modal-name').textContent = name;
+            document.getElementById('modal-status').textContent = status;
+            document.getElementById('modal-time').textContent = currentTime;
+            
+            // Tampilkan keterangan jika ada
+            const reasonContainer = document.getElementById('modal-reason-container');
+            if (reason.trim()) {
+                document.getElementById('modal-reason').textContent = reason;
+                reasonContainer.classList.remove('hidden');
+            } else {
+                reasonContainer.classList.add('hidden');
+            }
+            
+            // Cek keterlambatan (setelah jam 07:00)
+            const currentHour = now.getHours();
+            const lateWarning = document.getElementById('late-warning');
+            
+            if (currentHour >= 7) {
+                lateWarning.classList.remove('hidden');
+                document.getElementById('late-reason').required = true;
+            } else {
+                lateWarning.classList.add('hidden');
+                document.getElementById('late-reason').required = false;
+            }
+            
+            // Ambil lokasi GPS
+            getLocation();
+            
+            // Tampilkan modal
+            modal.classList.remove('hidden');
+        }
+
+        // Fungsi untuk mendapatkan lokasi GPS
+        function getLocation() {
+            const locationElement = document.getElementById('modal-location');
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude.toFixed(6);
+                        const lng = position.coords.longitude.toFixed(6);
+                        locationElement.textContent = `${lat}, ${lng}`;
+                    },
+                    function(error) {
+                        locationElement.textContent = 'Lokasi tidak tersedia';
+                    }
+                );
+            } else {
+                locationElement.textContent = 'GPS tidak didukung';
+            }
+        }
+
+        // Handle modal buttons
+        document.getElementById('cancel-btn').addEventListener('click', function() {
+            document.getElementById('confirmation-modal').classList.add('hidden');
+        });
+
+        // Handle submit button
+        document.getElementById('submit-btn').addEventListener('click', function() {
+            const name = document.getElementById('modal-name').textContent;
+            const status = document.getElementById('modal-status').textContent;
+            const location = document.getElementById('modal-location').textContent;
+            const reason = document.getElementById('modal-reason').textContent || '';
+            const lateReason = document.getElementById('late-reason').value || '';
+            
+            // Validasi alasan keterlambatan jika diperlukan
+            const currentHour = new Date().getHours();
+            if (currentHour >= 7 && !lateReason.trim()) {
+                showToast('Mohon isi alasan keterlambatan', 'error');
+                return;
+            }
+            
+            // Gabungkan keterangan dan alasan keterlambatan
+            let finalReason = reason;
+            if (lateReason.trim()) {
+                finalReason = reason ? `${reason} | Alasan Terlambat: ${lateReason}` : `Alasan Terlambat: ${lateReason}`;
+            }
+            
+            // URL Google Form dengan data yang sudah diisi
+            const googleFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSeN_GEbXkdOPOci4uInpDGlsfWJuXToZzJzM22V4T6UkIYQgA/viewform';
+            const params = new URLSearchParams({
+                'entry.983835751': name,
+                'entry.721161770': status,
+                'entry.1164492045': finalReason,
+                'entry.879176897': location,
+                'entry.14826235': lateReason
+            });
+            
+            const finalUrl = `${googleFormUrl}?${params.toString()}`;
+            
+            // Buka Google Form di tab baru
+            window.open(finalUrl, '_blank', 'noopener,noreferrer');
+            
+            // Tutup modal dan reset form
+            document.getElementById('confirmation-modal').classList.add('hidden');
+            document.getElementById('attendance-form').reset();
+            document.getElementById('reason-container').classList.add('hidden');
+            
+            // Tampilkan pesan sukses
+            showToast('Data berhasil dikirim ke Google Form!', 'success');
+        });
+
+        // Fungsi untuk menampilkan toast message
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 text-white';
+            
+            if (type === 'error') {
+                toast.style.backgroundColor = '#e73180';
+            } else if (type === 'success') {
+                toast.style.backgroundColor = '#10b981';
+            } else {
+                toast.style.backgroundColor = '#256cac';
+            }
+            
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('confirmation-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'995f8ad9e6bdb5e1',t:'MTc2MTcwODA4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
