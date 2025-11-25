@@ -169,7 +169,10 @@
                                     </div>
                                     <div>
                                         <label for="book-title" class="block text-xs font-medium text-gray-600 mb-1">Judul Buku</label>
-                                        <input type="text" id="book-title" name="book_title" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Contoh: Sang Pemimpi">
+                                        <select id="book-title" name="book_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+                                            <option value="">-- Pilih Buku --</option>
+                                            <option value="">Memuat daftar buku...</option>
+                                        </select>
                                     </div>
                                     <div>
                                         <label for="page-range" class="block text-xs font-medium text-gray-600 mb-1">Halaman</label>
@@ -391,7 +394,10 @@
                     </a>
                     
                     <a href="#" id="sidebar-dashboard" data-view="dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white">
-                        <i class="fas fa-tachometer-alt w-5 h-5"></i> <span class="font-medium">Dashboard Admin</span>
+                        <i class="fas fa-tachometer-alt w-5 h-5"></i> <span class="font-medium">Rekap Keaktifan</span>
+                    </a>
+                    <a href="#" id="sidebar-reading-recap" data-view="reading-recap" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white">
+                        <i class="fas fa-book-reader w-5 h-5"></i> <span class="font-medium">Rekap Bacaan</span>
                     </a>
                     <a href="#" id="sidebar-manage-schools" data-view="manage-schools" class="hidden flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white">
                         <i class="fas fa-school w-5 h-5"></i> <span class="font-medium">Sekolah</span>
@@ -407,6 +413,10 @@
                     </a>
                     <a href="#" id="sidebar-manage-activities" data-view="manage-activities" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white">
                         <i class="fas fa-book w-5 h-5"></i> <span class="font-medium">Aktivitas</span>
+                    </a>
+                    <!-- Tambahkan ini di bawah menu Aktivitas di Sidebar -->
+                    <a href="#" id="sidebar-manage-books" data-view="manage-books" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white">
+                        <i class="fas fa-swatchbook w-5 h-5"></i> <span class="font-medium">Buku</span>
                     </a>
                 </nav>
                 <div class="p-4 border-t border-gray-700">
@@ -516,7 +526,7 @@
 
                     <!-- CONTENT: DASHBOARD ADMIN -->
                     <div id="admin-dashboard-content" class="admin-content-section hidden">
-                        <h3 class="text-xl font-semibold mb-6">Dashboard Admin</h3>
+                        <h3 class="text-xl font-semibold mb-6">Rekap Keaktifan</h3>
                         
                         <!-- Filter Bar -->
                         <div class="bg-white p-4 rounded-lg shadow mb-6 border border-gray-200">
@@ -538,7 +548,6 @@
                                 </button>
                             </div>
                         </div>
-
                         <!-- Summary Cards -->
                         <div id="dashboard-summary-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <!-- Card Ketercapaian -->
@@ -555,7 +564,68 @@
                         <div id="dashboard-student-table-container" class="bg-white rounded-lg shadow overflow-hidden">
                             <p class="text-center text-gray-500 p-8">Pilih filter untuk memuat tabel murid.</p>
                         </div>
+                    
+                    </div>
 
+                    <!-- CONTENT: REKAP BACAAN (SNAPSHOT) -->
+                    <div id="admin-reading-recap-content" class="admin-content-section hidden">
+                        <h3 class="text-xl font-semibold mb-6">Rekapitulasi Bacaan Terakhir Siswa</h3>
+                            
+                        <!-- Filter Bar -->
+                        <div class="bg-white p-4 rounded-lg shadow mb-6 border border-gray-200">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-1">Pilih Kelas (Wajib)</label>
+                                    <select id="recap-filter-class" class="w-full border p-2 rounded text-sm bg-gray-50">
+                                        <option value="">-- Pilih Kelas --</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 mb-1">Filter Kategori Buku (Opsional)</label>
+                                    <select id="recap-filter-category" class="w-full border p-2 rounded text-sm">
+                                        <option value="">Semua Kategori</option>
+                                    </select>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button id="apply-recap-filter" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex-1 flex items-center justify-center gap-2">
+                                        <i class="fas fa-search"></i> Tampilkan
+                                    </button>
+                                    <button id="download-recap-excel" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2" disabled>
+                                        <i class="fas fa-file-excel"></i> Export
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tabel Detail Siswa -->
+                            <div class="bg-white rounded-lg shadow overflow-hidden">
+                                <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                                    <h4 class="font-bold text-gray-700">Detail Bacaan Terakhir Per Siswa</h4>
+                                    <span id="recap-total-student" class="text-xs bg-gray-200 px-2 py-1 rounded text-gray-700">Total: 0 Siswa</span>
+                                </div>
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-gray-100 border-b">
+                                        <tr>
+                                            <th class="p-4 text-sm font-bold text-gray-600 w-16">No</th>
+                                            <th class="p-4 text-sm font-bold text-gray-600">Nama Siswa</th>
+                                            <th class="p-4 text-sm font-bold text-gray-600">Kelas</th>
+                                            <th class="p-4 text-sm font-bold text-gray-600">Buku Terakhir Dibaca</th>
+                                            <th class="p-4 text-sm font-bold text-gray-600">Tanggal Update</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recap-table-body" class="divide-y">
+                                        <tr><td colspan="5" class="p-8 text-center text-gray-500">Data belum dimuat.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Summary Cards (Statistik Buku) -->
+                        <div id="recap-summary-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                            <!-- Kartu ringkasan buku akan muncul di sini (misal: Juz 30: 5 Siswa) -->
+                            <div class="col-span-full bg-blue-50 border border-blue-200 p-4 rounded text-center text-blue-700 text-sm">
+                                Silakan pilih kelas untuk melihat sebaran buku yang sedang dibaca siswa.
+                            </div>
+                        </div>
                     </div>
 
                     <!-- CONTENT: SEKOLAH -->
@@ -584,7 +654,7 @@
                     <div id="admin-manage-users-content" class="admin-content-section hidden">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-xl font-semibold">Daftar Pengguna</h3>
-				<div class="flex gap-2">
+				            <div class="flex gap-2">
                                 <button id="import-user-btn" class="bg-emerald-800 text-white px-4 py-2 rounded flex items-center gap-2"><i class="fas fa-file-excel"></i> Import Excel</button>
                                 <button id="add-user-btn" class="bg-green-600 text-white px-4 py-2 rounded">Tambah User</button>
                             </div>
@@ -715,7 +785,66 @@
                                <tbody id="sub-activities-table-body" class="divide-y"></tbody>
                            </table>
                        </div>
-                   </div>
+                    </div>
+                    
+                   <!-- VIEW 1: MANAJEMEN KATEGORI BUKU -->
+                    <div id="admin-manage-books-content" class="admin-content-section hidden">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                            <h3 class="text-xl font-semibold">Kategori Buku</h3>
+                            <button id="add-book-category-btn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                                <i class="fas fa-plus mr-2"></i>Tambah Kategori
+                            </button>
+                        </div>
+
+                        <!-- Tabel Kategori -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-4">No</th>
+                                        <th class="p-4">Nama Kategori</th>
+                                        <th class="p-4">Jumlah Buku</th> <!-- Opsional: Nanti bisa kita hitung -->
+                                        <th class="p-4">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="book-categories-table-body" class="divide-y">
+                                    <!-- Data akan dimuat di sini -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 2: DAFTAR BUKU (DETAIL) -->
+                    <div id="admin-books-list-content" class="admin-content-section hidden">
+                        <div class="flex items-center mb-6 gap-4">
+                            <button id="back-to-categories-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
+                                <i class="fas fa-arrow-left mr-2"></i> Kembali
+                            </button>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Daftar Buku</h3>
+                                <p class="text-sm text-gray-500">Kategori: <span id="parent-category-name" class="font-medium text-gray-900">-</span></p>
+                            </div>
+                            <button id="add-book-btn" class="ml-auto bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                                <i class="fas fa-plus mr-2"></i>Tambah Buku
+                            </button>
+                        </div>
+
+                        <!-- Tabel Buku -->
+                        <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-4">No</th>
+                                        <th class="p-4">Judul Buku</th>
+                                        <th class="p-4">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="books-table-body" class="divide-y">
+                                    <!-- Data akan dimuat di sini -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                 </main>
             </div>
@@ -1102,6 +1231,50 @@
     </div>
     <!-- End Modal: Edit Sekolah -->
 
+    <!-- Modal: Tambah/Edit Kategori Buku -->
+    <div id="book-category-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800" id="book-category-modal-title">Kategori Buku</h2>
+                <button onclick="document.getElementById('book-category-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times fa-lg"></i></button>
+            </div>
+            <form id="book-category-form">
+                <input type="hidden" id="book-category-id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kategori</label>
+                    <input type="text" id="book-category-name" class="w-full border p-2 rounded" required placeholder="Contoh: Novel, Komik, Biografi">
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('book-category-modal').classList.add('hidden')" class="px-4 py-2 text-gray-600 bg-gray-200 rounded">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Simpan</button>
+                </div>
+                <p id="book-category-form-message" class="text-sm mt-2 hidden text-center"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Tambah/Edit Buku -->
+    <div id="book-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800" id="book-modal-title">Buku</h2>
+                <button onclick="document.getElementById('book-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times fa-lg"></i></button>
+            </div>
+            <form id="book-form">
+                <input type="hidden" id="book-id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Judul Buku</label>
+                    <input type="text" id="book-name-input" class="w-full border p-2 rounded" required placeholder="Judul Buku">
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('book-modal').classList.add('hidden')" class="px-4 py-2 text-gray-600 bg-gray-200 rounded">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Simpan</button>
+                </div>
+                <p id="book-form-message" class="text-sm mt-2 hidden text-center"></p>
+            </form>
+        </div>
+    </div>
+
     <!-- 
       ============================================
       5. SCRIPT (LOGIC)
@@ -1470,7 +1643,8 @@
                 fetchHomeData(); 
             } else if (view === 'reading') {
                 parentReadingContent.classList.remove('hidden');
-                fetchReadingActivities(); 
+                fetchReadingActivities();
+                fetchBooksForParentDropdown(); 
             } else if (view === 'activity-form') { 
                 parentActivityFormContent.classList.remove('hidden');
                 activityDateInput.value = formatDateLocal(new Date()); 
@@ -1535,7 +1709,7 @@
             homeReadingLatestEl.innerHTML = '<p class="text-gray-500 text-center text-sm">Memuat data...</p>';
             const { data: latestReading, error: readError } = await supabaseClient
                 .from('reading_activities')
-                .select('*')
+                .select('*, books(book_name)')
                 .eq('student_id', targetStudentId)
                 .order('date', { ascending: false })
                 .limit(1)
@@ -1545,10 +1719,12 @@
                  homeReadingLatestEl.innerHTML = '<p class="text-gray-500 text-center text-sm">Belum ada catatan membaca.</p>';
             } else {
                 const readDate = new Date(latestReading.date).toLocaleDateString('id-ID');
+                const bookTitle = latestReading.books ? latestReading.books.book_name : 'Buku Dihapus';
+                
                 homeReadingLatestEl.innerHTML = `
                     <div class="w-full">
                         <p class="text-xs text-gray-500 mb-1">${readDate}</p>
-                        <p class="font-bold text-gray-800 text-base">${latestReading.book_title}</p>
+                        <p class="font-bold text-gray-800 text-base">${bookTitle}</p>
                         <p class="text-sm text-gray-600">Halaman: ${latestReading.page}</p>
                         <p class="text-sm text-green-700 mt-2">Tanda: ${latestReading.marks}</p>
                     </div>
@@ -1696,7 +1872,574 @@
             homeTaskPercentagesEl.innerHTML = htmlContent || '<p class="text-center text-gray-500 py-10">Tidak ada data aktivitas untuk bulan ini.</p>';
         }
 
+        // ==========================================================
+        // FUNGSI MANAJEMEN BUKU & KATEGORI
+        // ==========================================================
 
+        // --- Selectors ---
+        const sidebarManageBooks = document.getElementById('sidebar-manage-books');
+        const adminManageBooksContent = document.getElementById('admin-manage-books-content');
+        const adminBooksListContent = document.getElementById('admin-books-list-content');
+        const bookCategoriesTableBody = document.getElementById('book-categories-table-body');
+        const booksTableBody = document.getElementById('books-table-body');
+
+        // Tombol & Modal Kategori
+        const addBookCategoryBtn = document.getElementById('add-book-category-btn');
+        const bookCategoryModal = document.getElementById('book-category-modal');
+        const bookCategoryForm = document.getElementById('book-category-form');
+        const bookCategoryFormMessage = document.getElementById('book-category-form-message');
+
+        // Tombol & Modal Buku
+        const backToCategoriesBtn = document.getElementById('back-to-categories-btn');
+        const parentCategoryNameSpan = document.getElementById('parent-category-name');
+        const addBookBtn = document.getElementById('add-book-btn');
+        const bookModal = document.getElementById('book-modal');
+        const bookForm = document.getElementById('book-form');
+        const bookFormMessage = document.getElementById('book-form-message');
+
+        let currentParentCategoryId = null; // Menyimpan ID Kategori yang sedang dibuka
+
+        // 1. FUNGSI FETCH KATEGORI
+        async function fetchBookCategories() {
+            bookCategoriesTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Memuat data...</td></tr>';
+
+            let query = supabaseClient.from('book_categories')
+                .select('*, books(count)') // Ambil jumlah buku juga
+                .order('category_name', { ascending: true });
+
+            // Filter berdasarkan sekolah (Wajib untuk Admin Sekolah)
+            if (currentUserRole === 'admin_sekolah' && activeSchoolId) {
+                query = query.eq('school_id', activeSchoolId);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                bookCategoriesTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error: ${error.message}</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach((cat, index) => {
+                const bookCount = cat.books ? cat.books[0].count : 0;
+                html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-4 text-sm">${index + 1}</td>
+                        <td class="p-4 font-medium">${cat.category_name}</td>
+                        <td class="p-4 text-sm"><span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-bold">${bookCount} Buku</span></td>
+                        <td class="p-4 whitespace-nowrap">
+                            <button onclick="viewBookList('${cat.id}', '${cat.category_name}')" class="text-purple-600 hover:text-purple-800 text-sm font-medium">Daftar Buku</button>
+                            <button onclick="showEditBookCategoryModal('${cat.id}', '${cat.category_name}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium ml-2">Edit</button>
+                            <button onclick="deleteBookCategory('${cat.id}')" class="text-red-600 hover:text-red-800 text-sm font-medium ml-2">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            bookCategoriesTableBody.innerHTML = html || '<tr><td colspan="4" class="p-4 text-center text-gray-500">Belum ada kategori buku.</td></tr>';
+        }
+
+        // 2. FUNGSI FETCH BUKU (DETAIL)
+        async function fetchBooks(categoryId) {
+            booksTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Memuat data...</td></tr>';
+
+            const { data, error } = await supabaseClient
+                .from('books')
+                .select('*')
+                .eq('category_id', categoryId)
+                .order('book_name', { ascending: true });
+
+            if (error) {
+                booksTableBody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-500">Error: ${error.message}</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach((book, index) => {
+                html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-4 text-sm">${index + 1}</td>
+                        <td class="p-4 font-medium">${book.book_name}</td>
+                        <td class="p-4 whitespace-nowrap">
+                            <button onclick="showEditBookModal('${book.id}', '${book.book_name}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+                            <button onclick="deleteBook('${book.id}')" class="text-red-600 hover:text-red-800 text-sm font-medium ml-2">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            booksTableBody.innerHTML = html || '<tr><td colspan="3" class="p-4 text-center text-gray-500">Belum ada buku di kategori ini.</td></tr>';
+        }
+
+        // 3. LOGIKA CRUD KATEGORI
+
+        // Tampilkan Modal Tambah Kategori
+        addBookCategoryBtn.addEventListener('click', () => {
+            document.getElementById('book-category-id').value = '';
+            document.getElementById('book-category-name').value = '';
+            document.getElementById('book-category-modal-title').textContent = 'Tambah Kategori Buku';
+            bookCategoryFormMessage.classList.add('hidden');
+            bookCategoryModal.classList.remove('hidden');
+        });
+
+        // Tampilkan Modal Edit Kategori
+        window.showEditBookCategoryModal = (id, name) => {
+            document.getElementById('book-category-id').value = id;
+            document.getElementById('book-category-name').value = name;
+            document.getElementById('book-category-modal-title').textContent = 'Edit Kategori Buku';
+            bookCategoryFormMessage.classList.add('hidden');
+            bookCategoryModal.classList.remove('hidden');
+        };
+
+        // Simpan Kategori (Insert/Update)
+        bookCategoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('book-category-id').value;
+            const name = document.getElementById('book-category-name').value;
+            const messageEl = bookCategoryFormMessage;
+
+            messageEl.classList.add('hidden');
+            messageEl.classList.remove('text-red-600', 'bg-red-100', 'text-green-600', 'bg-green-100');
+
+            if (!activeSchoolId) {
+                messageEl.textContent = "Error: School ID tidak ditemukan.";
+                messageEl.classList.add('text-red-600', 'bg-red-100');
+                messageEl.classList.remove('hidden');
+                return;
+            }
+
+            const payload = { category_name: name, school_id: activeSchoolId };
+            let error;
+
+            if (id) { // Update
+                const { error: updateError } = await supabaseClient.from('book_categories').update({ category_name: name }).eq('id', id);
+                error = updateError;
+            } else { // Insert
+                const { error: insertError } = await supabaseClient.from('book_categories').insert([payload]);
+                error = insertError;
+            }
+
+            if (error) {
+                messageEl.textContent = `Gagal menyimpan: ${error.message}`;
+                messageEl.classList.add('text-red-600', 'bg-red-100');
+            } else {
+                messageEl.textContent = 'Berhasil disimpan!';
+                messageEl.classList.add('text-green-600', 'bg-green-100');
+                fetchBookCategories(); // Refresh table
+                setTimeout(() => bookCategoryModal.classList.add('hidden'), 1000);
+            }
+            messageEl.classList.remove('hidden');
+        });
+
+        // Hapus Kategori
+        window.deleteBookCategory = async (id) => {
+            if (confirm("Apakah Anda yakin ingin menghapus kategori ini? Semua buku di dalamnya juga akan terhapus.")) {
+                const { error } = await supabaseClient.from('book_categories').delete().eq('id', id);
+                if (error) alert(`Gagal menghapus: ${error.message}`);
+                else fetchBookCategories();
+            }
+        };
+
+        // 4. NAVIGASI ANTARA KATEGORI DAN DAFTAR BUKU
+        window.viewBookList = (categoryId, categoryName) => {
+            currentParentCategoryId = categoryId;
+            parentCategoryNameSpan.textContent = categoryName;
+
+            // Sembunyikan view kategori, tampilkan view buku
+            adminManageBooksContent.classList.add('hidden');
+            adminBooksListContent.classList.remove('hidden');
+            
+            // Set header admin
+            document.getElementById('admin-header-title').textContent = `Daftar Buku: ${categoryName}`;
+
+            fetchBooks(categoryId);
+        };
+
+        backToCategoriesBtn.addEventListener('click', () => {
+            adminBooksListContent.classList.add('hidden');
+            adminManageBooksContent.classList.remove('hidden');
+            document.getElementById('admin-header-title').textContent = 'Kategori Buku';
+            fetchBookCategories(); // Refresh data kategori (update jumlah buku)
+        });
+
+        // 5. LOGIKA CRUD BUKU
+
+        // Tampilkan Modal Tambah Buku
+        addBookBtn.addEventListener('click', () => {
+            document.getElementById('book-id').value = '';
+            document.getElementById('book-name-input').value = '';
+            document.getElementById('book-modal-title').textContent = 'Tambah Buku';
+            bookFormMessage.classList.add('hidden');
+            bookModal.classList.remove('hidden');
+        });
+
+        // Tampilkan Modal Edit Buku
+        window.showEditBookModal = (id, name) => {
+            document.getElementById('book-id').value = id;
+            document.getElementById('book-name-input').value = name;
+            document.getElementById('book-modal-title').textContent = 'Edit Buku';
+            bookFormMessage.classList.add('hidden');
+            bookModal.classList.remove('hidden');
+        };
+
+        // Simpan Buku (Insert/Update)
+        bookForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('book-id').value;
+            const name = document.getElementById('book-name-input').value;
+            const messageEl = bookFormMessage;
+
+            messageEl.classList.add('hidden');
+            
+            const payload = { 
+                book_name: name, 
+                category_id: currentParentCategoryId // Ambil ID Kategori yang sedang dibuka
+            };
+            
+            let error;
+            if (id) { // Update
+                const { error: updateError } = await supabaseClient.from('books').update({ book_name: name }).eq('id', id);
+                error = updateError;
+            } else { // Insert
+                const { error: insertError } = await supabaseClient.from('books').insert([payload]);
+                error = insertError;
+            }
+
+            if (error) {
+                messageEl.textContent = `Gagal menyimpan: ${error.message}`;
+                messageEl.classList.add('text-red-600', 'bg-red-100');
+                messageEl.classList.remove('text-green-600', 'bg-green-100');
+            } else {
+                messageEl.textContent = 'Berhasil disimpan!';
+                messageEl.classList.add('text-green-600', 'bg-green-100');
+                messageEl.classList.remove('text-red-600', 'bg-red-100');
+                fetchBooks(currentParentCategoryId); // Refresh table buku
+                setTimeout(() => bookModal.classList.add('hidden'), 1000);
+            }
+            messageEl.classList.remove('hidden');
+        });
+
+        // Hapus Buku
+        window.deleteBook = async (id) => {
+            if (confirm("Hapus buku ini?")) {
+                const { error } = await supabaseClient.from('books').delete().eq('id', id);
+                if (error) alert(`Gagal menghapus: ${error.message}`);
+                else fetchBooks(currentParentCategoryId);
+            }
+        };
+
+        // === INTEGRASI KE FUNGSI showAdminContent ===
+        // Perlu ada perubahan kecil di fungsi showAdminContent yang sudah ada
+        // Anda bisa menambahkan baris ini secara manual di dalam fungsi `showAdminContent(contentId)` yang sudah ada:
+        // if (contentId === 'manage-books') fetchBookCategories();
+
+        // ==========================================================
+        // FUNGSI REKAP BACAAN (SNAPSHOT VIEW)
+        // ==========================================================
+
+        // Selectors
+        const recapFilterClass = document.getElementById('recap-filter-class');
+        const recapFilterCategory = document.getElementById('recap-filter-category');
+        const applyRecapFilterBtn = document.getElementById('apply-recap-filter');
+        const downloadRecapExcelBtn = document.getElementById('download-recap-excel');
+        const recapSummaryContainer = document.getElementById('recap-summary-container');
+        const recapTableBody = document.getElementById('recap-table-body');
+        const recapTotalStudentEl = document.getElementById('recap-total-student');
+
+        // Variabel Global untuk menyimpan data hasil filter (untuk keperluan Export Excel)
+        let currentRecapData = []; 
+
+        // 1. POPULATE FILTERS (Dipanggil saat menu dibuka)
+        async function populateReadingRecapFilters() {
+            console.log("Memulai populateReadingRecapFilters..."); 
+
+            // 1. ISI FILTER KELAS
+            const classSelect = document.getElementById('recap-filter-class');
+            classSelect.innerHTML = '<option value="">Memuat data kelas...</option>';
+
+            let classQuery = supabaseClient
+                .from('classes')
+                .select('id, class_name')
+                .order('class_name', { ascending: true });
+            
+            if (currentUserRole === 'admin_sekolah' && activeSchoolId) {
+                classQuery = classQuery.eq('school_id', activeSchoolId);
+            }
+            
+            const { data: classes, error: classError } = await classQuery;
+
+            if (classError) {
+                console.error("Error Fetch Kelas:", classError);
+                classSelect.innerHTML = '<option value="">Gagal memuat kelas</option>';
+            } else {
+                // PERUBAHAN DISINI: Opsi default adalah "Semua Kelas" (value kosong)
+                let classHtml = '<option value="">Semua Kelas</option>'; 
+                if (classes && classes.length > 0) {
+                    classes.forEach(c => classHtml += `<option value="${c.id}">${c.class_name}</option>`);
+                }
+                classSelect.innerHTML = classHtml;
+            }
+
+            // 2. ISI FILTER KATEGORI BUKU
+            const catSelect = document.getElementById('recap-filter-category');
+            catSelect.innerHTML = '<option value="">Memuat...</option>';
+
+            let catQuery = supabaseClient
+                .from('book_categories')
+                .select('id, category_name')
+                .order('category_name', { ascending: true });
+            
+            if (currentUserRole === 'admin_sekolah' && activeSchoolId) {
+                catQuery = catQuery.eq('school_id', activeSchoolId);
+            }
+            
+            const { data: categories, error: catError } = await catQuery;
+
+            if (catError) {
+                console.error("Error Fetch Kategori:", catError);
+                catSelect.innerHTML = '<option value="">Gagal memuat kategori</option>';
+            } else {
+                let catHtml = '<option value="">Semua Kategori</option>';
+                if (categories && categories.length > 0) {
+                    categories.forEach(c => catHtml += `<option value="${c.id}">${c.category_name}</option>`);
+                }
+                catSelect.innerHTML = catHtml;
+            }
+        }
+
+        // 2. FUNGSI UTAMA: FETCH DATA & LOGIKA SNAPSHOT
+        // VERSI UPDATE: Snapshot per Kategori & Support Semua Kelas
+        async function fetchReadingRecapSnapshot() {
+            const classId = document.getElementById('recap-filter-class').value;
+            const categoryId = document.getElementById('recap-filter-category').value;
+
+            // HAPUS VALIDASI WAJIB KELAS (Sekarang boleh kosong/Semua Kelas)
+            // if (!classId) { alert(...); return; } 
+
+            // UI Loading
+            const recapTableBody = document.getElementById('recap-table-body');
+            const recapSummaryContainer = document.getElementById('recap-summary-container');
+            const downloadRecapExcelBtn = document.getElementById('download-recap-excel');
+            const recapTotalStudentEl = document.getElementById('recap-total-student');
+
+            recapTableBody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Sedang menganalisis data bacaan terakhir...</td></tr>';
+            recapSummaryContainer.innerHTML = '<div class="col-span-full text-center text-gray-500 py-4">Menghitung statistik...</div>';
+            downloadRecapExcelBtn.disabled = true;
+
+            // A. Query Data Siswa
+            let studentQuery = supabaseClient
+                .from('students_maps')
+                .select(`
+                    user_id,
+                    users!inner(name, school_id),
+                    classes!inner(class_name)
+                `);
+
+            // Filter Kelas (Jika dipilih spesifik)
+            if (classId) {
+                studentQuery = studentQuery.eq('class_id', classId);
+            } else if (currentUserRole === 'admin_sekolah' && activeSchoolId) {
+                // Jika "Semua Kelas" dipilih oleh Admin Sekolah, ambil semua murid sekolah ini
+                studentQuery = studentQuery.eq('users.school_id', activeSchoolId);
+            }
+
+            const { data: students, error: studentError } = await studentQuery;
+
+            if (studentError || !students) {
+                recapTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 p-4">Gagal memuat siswa: ${studentError?.message}</td></tr>`;
+                return;
+            }
+
+            const studentIds = students.map(s => s.user_id);
+            if (studentIds.length === 0) {
+                recapTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 p-4">Tidak ada siswa ditemukan.</td></tr>';
+                recapSummaryContainer.innerHTML = '';
+                return;
+            }
+
+            // B. Ambil Aktivitas Membaca (Sort by Date DESC)
+            const { data: activities, error: actError } = await supabaseClient
+                .from('reading_activities')
+                .select(`
+                    student_id,
+                    date,
+                    book_id,
+                    books!inner(
+                        book_name,
+                        category_id,
+                        book_categories(id, category_name)
+                    )
+                `)
+                .in('student_id', studentIds)
+                .order('date', { ascending: false });
+
+            if (actError) {
+                recapTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 p-4">Gagal memuat aktivitas: ${actError.message}</td></tr>`;
+                return;
+            }
+
+            // C. LOGIKA SNAPSHOT BARU: Group by Student AND Category
+            // Struktur Map: { studentId: { categoryId: { activityData } } }
+            const studentCategoryMap = {}; 
+            const bookStats = {}; // Statistik buku
+
+            activities.forEach(act => {
+                const sId = act.student_id;
+                const cId = act.books.category_id; // ID Kategori
+                
+                // Inisialisasi object murid jika belum ada
+                if (!studentCategoryMap[sId]) {
+                    studentCategoryMap[sId] = {};
+                }
+
+                // KUNCI LOGIKA: 
+                // Karena data sudah di-sort DESC (terbaru diatas),
+                // Kita hanya simpan data JIKA kategori ini BELUM ada di map siswa tersebut.
+                // Artinya kita hanya mengambil "Buku Terakhir per Kategori".
+                if (!studentCategoryMap[sId][cId]) {
+                    
+                    // Cek Filter Kategori (Jika user memilih kategori spesifik di dropdown)
+                    if (categoryId && cId.toString() !== categoryId) {
+                        return; // Skip jika kategori tidak sesuai filter
+                    }
+
+                    studentCategoryMap[sId][cId] = {
+                        book_name: act.books.book_name,
+                        category_name: act.books.book_categories?.category_name || 'Tanpa Kategori',
+                        last_date: act.date
+                    };
+                }
+            });
+
+            // D. FLATTEN DATA (Ubah Map menjadi Array Baris Tabel)
+            let processedData = [];
+
+            students.forEach(student => {
+                const userId = student.user_id;
+                const categoriesRead = studentCategoryMap[userId];
+
+                if (categoriesRead && Object.keys(categoriesRead).length > 0) {
+                    // Siswa punya riwayat bacaan (Loop setiap kategori yang dia baca)
+                    Object.values(categoriesRead).forEach(readData => {
+                        
+                        // Hitung Statistik
+                        if (!bookStats[readData.book_name]) bookStats[readData.book_name] = 0;
+                        bookStats[readData.book_name]++;
+
+                        processedData.push({
+                            name: student.users.name,
+                            class: student.classes.class_name,
+                            category: readData.category_name, // Kolom tambahan (Logic Baru)
+                            book: readData.book_name,
+                            date: new Date(readData.last_date).toLocaleDateString('id-ID')
+                        });
+                    });
+                } else {
+                    // Siswa BELUM punya riwayat bacaan sama sekali
+                    // Jika filter kategori "Semua", kita tampilkan baris kosong
+                    // Jika filter kategori spesifik, siswa ini tidak muncul (karena tidak relevan)
+                    if (!categoryId) {
+                        processedData.push({
+                            name: student.users.name,
+                            class: student.classes.class_name,
+                            category: '-',
+                            book: 'Belum ada riwayat',
+                            date: '-'
+                        });
+                    }
+                }
+            });
+
+            // Sort: Nama Siswa ASC, lalu Kategori ASC
+            processedData.sort((a, b) => {
+                if (a.name === b.name) {
+                    return a.category.localeCompare(b.category);
+                }
+                return a.name.localeCompare(b.name);
+            });
+
+            // Simpan ke global variable (untuk export excel)
+            // Note: Pastikan variabel 'currentRecapData' sudah dideklarasikan di global scope (let currentRecapData = [])
+            currentRecapData = processedData; 
+            
+            recapTotalStudentEl.textContent = `Total Baris Data: ${processedData.length}`;
+
+            // E. RENDER SUMMARY (STATISTIK)
+            let summaryHtml = '';
+            const sortedStats = Object.entries(bookStats).sort((a, b) => b[1] - a[1]);
+            
+            if (sortedStats.length > 0) {
+                sortedStats.forEach(([book, count]) => {
+                    summaryHtml += `
+                        <div class="bg-white border border-green-200 rounded p-3 shadow-sm flex justify-between items-center">
+                            <span class="font-medium text-gray-700 truncate mr-2 text-xs" title="${book}">${book}</span>
+                            <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">${count}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                summaryHtml = '<div class="col-span-full text-center text-gray-500 text-sm">Tidak ada data bacaan sesuai filter.</div>';
+            }
+            recapSummaryContainer.innerHTML = summaryHtml;
+
+            // F. RENDER TABEL
+            let tableHtml = '';
+            if (processedData.length > 0) {
+                processedData.forEach((row, index) => {
+                    const rowColor = row.book === "Belum ada riwayat" ? "text-gray-400 italic" : "text-gray-800";
+                    // Tambahkan badge kategori kecil di bawah judul buku atau di kolom nama
+                    tableHtml += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-4 text-sm text-gray-600">${index + 1}</td>
+                            <td class="p-4 text-sm font-medium text-gray-800">
+                                ${row.name}
+                                <div class="text-xs text-blue-600 font-normal mt-0.5">${row.category !== '-' ? row.category : ''}</div>
+                            </td>
+                            <td class="p-4 text-sm text-gray-600">${row.class}</td>
+                            <td class="p-4 text-sm ${rowColor}">${row.book}</td>
+                            <td class="p-4 text-sm text-gray-500">${row.date}</td>
+                        </tr>
+                    `;
+                });
+                downloadRecapExcelBtn.disabled = false;
+                downloadRecapExcelBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                downloadRecapExcelBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            } else {
+                tableHtml = '<tr><td colspan="5" class="p-8 text-center text-gray-500">Tidak ada data siswa yang ditemukan.</td></tr>';
+            }
+            recapTableBody.innerHTML = tableHtml;
+        }
+
+        // 3. FUNGSI EXPORT EXCEL
+        function downloadReadingRecapExcel() {
+            if (currentRecapData.length === 0) {
+                alert("Tidak ada data untuk diexport.");
+                return;
+            }
+
+            const className = recapFilterClass.options[recapFilterClass.selectedIndex].text;
+            const catName = recapFilterCategory.value ? recapFilterCategory.options[recapFilterCategory.selectedIndex].text : "Semua Kategori";
+            
+            // Format Data untuk Excel (Updated dengan Kolom Kategori)
+            const excelData = currentRecapData.map((row, index) => ({
+                'No': index + 1,
+                'Nama Siswa': row.name,
+                'Kelas': row.class,
+                'Kategori': row.category, // Tambahan Kolom Baru
+                'Buku Terakhir Dibaca': row.book,
+                'Tanggal Update': row.date
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Bacaan");
+
+            const fileName = `Rekap_Bacaan_${className}_${catName}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // --- EVENT LISTENERS ---
+        applyRecapFilterBtn.addEventListener('click', fetchReadingRecapSnapshot);
+        downloadRecapExcelBtn.addEventListener('click', downloadReadingRecapExcel);
+        
         // 6. Fungsi untuk mengambil data user dan mengarahkan (redirect)
         async function checkUserAndRedirect(user) {
             
@@ -1734,13 +2477,17 @@
                 showAdminContent(contentToShow);
                 
                 const schoolNameEl = document.getElementById('admin-school-name');
+                const headerTitleEl = document.getElementById('admin-header-title');
                 if (role === 'super_admin') {
                     schoolNameEl.textContent = 'Super Admin Dashboard';
+                    headerTitleEl.textContent = 'Panel Super Admin';
                     sidebarManageSchools.classList.remove('hidden'); // Tampilkan Sekolah untuk Super Admin
                     sidebarSchoolProfile.classList.add('hidden'); // Sembunyikan Profil Sekolah untuk Super Admin
                     activityFilterSchoolWrapper.classList.remove('hidden');
                 } else if (role === 'admin_sekolah') {
-                    schoolNameEl.textContent = userData.schools?.school_name || 'Admin Sekolah (Belum diatur)';
+                    const sName = userData.schools?.school_name || 'Admin Sekolah (Belum diatur)';
+                    schoolNameEl.textContent = sName;
+                    headerTitleEl.textContent = sName;
                     sidebarManageSchools.classList.add('hidden'); // Sembunyikan Sekolah untuk Admin Sekolah
                     sidebarSchoolProfile.classList.remove('hidden'); // Tampilkan Profil Sekolah untuk Admin Sekolah
                     activityFilterSchoolWrapper.classList.add('hidden');
@@ -2051,7 +2798,7 @@
             const payload = {
                 student_id: studentId,
                 date: formData.get('date'),
-                book_title: formData.get('book_title'),
+                book_id: formData.get('book_id'),
                 page: formData.get('page'),
                 marks: formData.get('marks'),
                 notes: formData.get('notes'),
@@ -2084,9 +2831,13 @@
 
             readingActivitiesFeed.innerHTML = '<p class="text-center text-gray-500 text-sm">Memuat data...</p>';
 
+            // UPDATE QUERY: Tambahkan relasi ke tabel books
             const { data: activities, error: activityError } = await supabaseClient
                 .from('reading_activities')
-                .select('*')
+                .select(`
+                    *,
+                    books (book_name)  
+                `)
                 .eq('student_id', userId)
                 .order('date', { ascending: false }); 
 
@@ -2104,10 +2855,15 @@
                         day: 'numeric', month: 'short', year: 'numeric'
                     });
                     
+                    // UPDATE: Ambil judul dari objek relasi 'books'
+                    // Jika buku dihapus (null), tampilkan fallback text
+                    const bookName = activity.books ? activity.books.book_name : 'Judul Buku Tidak Ditemukan';
+
                     const card = `
                         <div class="border border-gray-200 rounded-lg p-4 transition-shadow hover:shadow-md bg-white">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="font-semibold text-gray-800">${activity.book_title || 'Buku Tanpa Judul'}</span>
+                                <!-- Gunakan variable bookName -->
+                                <span class="font-semibold text-gray-800">${bookName}</span>
                                 <span class="text-xs text-gray-500">${dateDisplay}</span>
                             </div>
                             <p class="text-gray-600 text-sm mb-2">Halaman: ${activity.page || '-'}</p>
@@ -2122,10 +2878,62 @@
                     `;
                     readingActivitiesFeed.innerHTML += card;
                 });
-
             } else {
                 readingActivitiesFeed.innerHTML = '<p class="text-center text-gray-500 text-lg py-10">Belum ada laporan membaca yang tercatat.</p>';
             }
+        }
+
+        // FUNGSI BARU: Mengambil Buku untuk Dropdown
+        async function fetchBooksForParentDropdown() {
+            const selectEl = document.getElementById('book-title');
+            
+            // Cek ID Sekolah
+            if (!activeSchoolId) {
+                selectEl.innerHTML = '<option value="">Sekolah tidak terdeteksi</option>';
+                return; 
+            }
+
+            // Ambil buku + kategori, filter by school_id via kategori
+            const { data: books, error } = await supabaseClient
+                .from('books')
+                .select(`
+                    id,
+                    book_name,
+                    book_categories!inner(category_name, school_id)
+                `)
+                .eq('book_categories.school_id', activeSchoolId)
+                .order('book_name', { ascending: true });
+
+            if (error) {
+                console.error("Error fetching books:", error);
+                selectEl.innerHTML = '<option value="">Gagal memuat buku</option>';
+                return;
+            }
+
+            if (!books || books.length === 0) {
+                selectEl.innerHTML = '<option value="">Tidak ada buku tersedia</option>';
+                return;
+            }
+
+            // Grouping berdasarkan Kategori
+            const groupedBooks = {};
+            books.forEach(book => {
+                const catName = book.book_categories?.category_name || 'Lainnya';
+                if (!groupedBooks[catName]) groupedBooks[catName] = [];
+                groupedBooks[catName].push(book);
+            });
+
+            // Render HTML
+            let html = '<option value="">-- Pilih Buku --</option>';
+            for (const [category, bookList] of Object.entries(groupedBooks)) {
+                html += `<optgroup label="${category}">`;
+                bookList.forEach(book => {
+                    // VALUE SEKARANG ADALAH ID BUKU, BUKAN JUDUL
+                    html += `<option value="${book.id}">${book.book_name}</option>`;
+                });
+                html += `</optgroup>`;
+            }
+            selectEl.innerHTML = html;
         }
         
         // FUNGSI: Mengambil dan merender status laporan harian
@@ -2419,7 +3227,7 @@
             const content = document.getElementById(`admin-${contentId}-content`);
             if (content) {
                 content.classList.remove('hidden');
-                document.getElementById('admin-header-title').textContent = content.querySelector('h3') ? content.querySelector('h3').textContent : 'Dashboard';
+                //document.getElementById('admin-header-title').textContent = content.querySelector('h3') ? content.querySelector('h3').textContent : 'Dashboard';
                 localStorage.setItem('dstar_admin_active_content', contentId);
             }
             
@@ -2439,6 +3247,8 @@
             if (contentId === 'manage-users') fetchUsers();
             if (contentId === 'manage-classes') fetchClasses();
             if (contentId === 'manage-groups') fetchReadingGroups();
+            if (contentId === 'manage-books') fetchBookCategories();
+            if (contentId === 'reading-recap') populateReadingRecapFilters();
             if (contentId === 'manage-activities') {
                 populateActivityFilters();
                 fetchActivities();
@@ -2450,7 +3260,7 @@
             if (contentId === 'dashboard') { // BARU
                 populateMainDashboardFilters();
                 // Data tidak dimuat otomatis, menunggu tombol "Muat Data"
-                // fetchMainDashboardData(); 
+                // fetchMainDashboardData();
             }
         }
         
@@ -2902,8 +3712,9 @@
             const { data: readingNotes, error: readError } = await supabaseClient
                 .from('reading_activities')
                 .select(`
-                    date, book_title, page, notes, marks, 
-                    users(name)
+                    date, page, notes, marks, 
+                    users(name),
+                    books(book_name)
                 `)
                 .in('student_id', studentIds)
                 .order('date', { ascending: false })
@@ -2919,6 +3730,7 @@
                 readingNotes.forEach(note => {
                     const dateDisplay = new Date(note.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
                     const studentName = note.users?.name || 'Murid Tidak Dikenal';
+                    const bookTitle = note.books ? note.books.book_name : 'Judul Tidak Ditemukan';
                     
                     latestReadingNotesContainer.innerHTML += `
                         <div class="border-l-4 ${note.marks === 'A' ? 'border-green-500' : note.marks === 'B' ? 'border-yellow-500' : 'border-red-500'} bg-gray-50 p-3 rounded-md shadow-sm">
@@ -5480,5 +6292,3 @@
     </script>
 </body>
 </html>
-
-
