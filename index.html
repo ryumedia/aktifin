@@ -2526,6 +2526,7 @@
         // FUNGSI UTAMA: Mengambil data dan mapping user untuk Parent View
         async function fetchParentData(userId, role) {
             
+            // 1. QUERY YANG LEBIH AMAN (Hapus relasi guru yang bikin error)
             const { data: userData, error: userError } = await supabaseClient
                 .from('users')
                 .select(`
@@ -2533,17 +2534,31 @@
                     students_maps(
                         class_id, 
                         reading_group_id,
-                        classes(class_name, wali_kelas:users!wali_class_id(name)),
-                        reading_groups(group_name, guru_kelompok:users!guru_group_id(name))
+                        classes(class_name),
+                        reading_groups(group_name)
                     )
                 `)
                 .eq('id', userId)
                 .single();
             
+            // Debugging: Cek apakah error
+            if (userError) {
+                console.error("Error Fetch Parent Data:", userError);
+                // Fallback jika error
+                if (studentNameEl) studentNameEl.textContent = "Error Memuat Data";
+                return;
+            }
+
             let displayName = userData?.name || 'Memuat...';
             let displayClass = 'Belum ada mapping';
 
-            const mapData = userData?.students_maps;
+            // 2. HANDLING DATA SISWA (Array vs Object Check)
+            // Supabase kadang mengembalikan array, kadang object. Kita handle keduanya.
+            let mapData = userData?.students_maps;
+            if (Array.isArray(mapData)) {
+                mapData = mapData.length > 0 ? mapData[0] : null;
+            }
+
             const classInfo = mapData?.classes;
             const groupInfo = mapData?.reading_groups;
             
@@ -2595,7 +2610,7 @@
                         
                         if (targetStudentList.length > 0) {
                             targetStudentId = targetStudentList[0].id; 
-                            // Pastikan studentClassId dan studentGroupId diperbarui berdasarkan murid pertama di daftar (jika perlu)
+                            // Update ID untuk filter form aktivitas
                             const { data: studentMapData } = await supabaseClient
                                 .from('students_maps')
                                 .select('class_id, reading_group_id')
@@ -2610,16 +2625,9 @@
                         targetStudentId = userId;
                     }
 
-                    // Menentukan display class/group name
-                    let joinTable;
-                    let displayKey;
-                    if (role === 'wali_kelas') {
-                        joinTable = 'classes';
-                        displayKey = 'class_name';
-                    } else {
-                        joinTable = 'reading_groups';
-                        displayKey = 'group_name';
-                    }
+                    // Menentukan nama kelas/kelompok untuk header guru
+                    let joinTable = role === 'wali_kelas' ? 'classes' : 'reading_groups';
+                    let displayKey = role === 'wali_kelas' ? 'class_name' : 'group_name';
                     
                     const { data: mappedItem } = await supabaseClient
                         .from(joinTable)
@@ -2629,7 +2637,7 @@
 
                     if (mappedItem && mappedItem[displayKey]) {
                         const mappedName = mappedItem[displayKey];
-                        displayClass = `${role === 'wali_kelas' ? 'Wali Kelas ' : 'Pembimbing Grup '} ${mappedName}`;
+                        displayClass = `${role === 'wali_kelas' ? 'Wali Kelas ' : 'Pembimbing '} ${mappedName}`;
                     }
                 } else {
                     targetStudentId = userId; 
@@ -2646,7 +2654,7 @@
             // Inisialisasi Tampilan Awal
             showParentContent('home');
 
-            // 4. Update UI Header Siswa/Guru
+            // 3. UPDATE HEADER
             if (studentNameEl && studentClassEl) {
                 studentNameEl.textContent = displayName;
                 studentClassEl.textContent = displayClass;
