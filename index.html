@@ -21,7 +21,7 @@
     <!-- Chart.js Datalabels Plugin (BARU) -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Quicksand', sans-serif; }
         /* Style untuk menyembunyikan scrollbar di elemen tertentu */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -46,8 +46,8 @@
       1. TAMPILAN LOGIN
       ============================================
     -->
-    <div id="login-view" class="flex items-center justify-center min-h-screen bg-gray-100">
-        <div class="w-full max-w-md p-8 bg-white rounded-lg shadow-xl">
+    <div id="login-view" class="flex items-center justify-center min-h-screen bg-gray-100 h-full">
+        <div class="w-full max-w-lg p-8 bg-white rounded-lg shadow-xl">
             <div class="text-center mb-10">
                 <div class="w-48 h-48 mx-auto mb-2 relative flex items-center justify-center">
                     <img src="https://blogger.googleusercontent.com/img/a/AVvXsEgFGAvS7c97COlxTeKsROW33etVQLK6a2eGQHkMBatvjmRFgL0ABKxb2UwAvYRLtTr9rOAjkbDRUfbYE0zX0yYeL0iuMaQ7qA_s3VbJVYP6xuYf7MqOK2_SmqGPi5ujJVgjskdtHamhCAG2cRsh5sl3ra1ryyomofGbQ5pbi6OcVOln_spdBSjAqL6VoiI" alt="Logo D-Star" class="w-full h-full object-contain">
@@ -1152,6 +1152,7 @@
                     <li>Role yang valid: 'murid', 'wali_kelas', 'guru_kelompok'.</li>
                 </ul>
                 <div class="mt-3">
+                    <!-- GANTI # DENGAN LINK GOOGLE DRIVE ANDA NANTI -->
                     <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRN_YvQIN35ODqTg5UeqB54-K-i7pbHhXY0CXBEcrmr9SUwt35G1siYmCzlcaebGw/pub?output=xlsx" target="_blank" class="inline-flex items-center text-xs font-bold text-blue-600 hover:underline">
                         <i class="fas fa-download mr-1"></i> Download Template Excel
                     </a>
@@ -3615,8 +3616,6 @@
             
             // Destroy instance chart lama jika ada
             if (activityBarChartInstance) {
-                // Unregister plugin datalabels agar tidak menumpuk
-                Chart.unregister(ChartDataLabels);
                 activityBarChartInstance.destroy();
             }
             
@@ -3706,10 +3705,6 @@
             };
 
             activityBarChartInstance = new Chart(ctx, config);
-            
-            // Daftarkan plugin datalabels secara global untuk chart ini
-            Chart.register(ChartDataLabels);
-
             // Tampilkan chart
             chartContainerWrapper.classList.remove('hidden');
         }
@@ -3948,9 +3943,10 @@
                 doc.setFontSize(11);
                 doc.text("B. 3 Catatan Akhir Kegiatan Membaca", 20, readingLogY);
 
+                // UPDATE QUERY: Mengambil judul dari relasi books(book_name)
                 const { data: readingNotes } = await supabaseClient
                     .from('reading_activities')
-                    .select('date, book_title, notes, marks')
+                    .select('date, notes, marks, books(book_name)') 
                     .eq('student_id', studentId)
                     .order('date', { ascending: false })
                     .limit(3);
@@ -3962,14 +3958,17 @@
                 if (readingNotes && readingNotes.length > 0) {
                     readingNotes.forEach((note, index) => {
                         const date = new Date(note.date).toLocaleDateString('id-ID');
-                        const title = `${index + 1}. [${date}] ${note.book_title} (Nilai: ${note.marks})`;
+                        
+                        // UPDATE LOGIC: Ambil nama buku dari relasi
+                        const bookName = note.books ? note.books.book_name : 'Buku dihapus';
+                        
+                        const title = `${index + 1}. [${date}] ${bookName} (Nilai: ${note.marks})`;
                         doc.text(title, 20, currentY);
                         
-                        // Handle text wrapping untuk catatan yang panjang
+                        // Handle text wrapping untuk catatan
                         const splitNotes = doc.splitTextToSize(`   Catatan: "${note.notes}"`, 170);
                         doc.text(splitNotes, 20, currentY + 5);
                         
-                        // Hitung tinggi baris berdasarkan jumlah baris text
                         currentY += 5 + (splitNotes.length * 5) + 2; 
                     });
                 } else {
@@ -6300,6 +6299,3 @@
     </script>
 </body>
 </html>
-
-
-
