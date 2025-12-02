@@ -3743,7 +3743,7 @@
                     latestReadingNotesContainer.innerHTML += `
                         <div class="border-l-4 ${note.marks === 'A' ? 'border-green-500' : note.marks === 'B' ? 'border-yellow-500' : 'border-red-500'} bg-gray-50 p-3 rounded-md shadow-sm">
                             <div class="flex justify-between items-center text-sm">
-                                <p class="font-bold text-gray-800">${note.book_title} <span class="text-xs font-normal text-gray-500 ml-2">(${studentName})</span></p>
+                                <p class="font-bold text-gray-800">${bookTitle} <span class="text-xs font-normal text-gray-500 ml-2">(${studentName})</span></p>
                                 <p class="text-xs text-gray-600 mt-1">Halaman: ${note.page}</p>
                             </div>
                             <p class="text-xs text-gray-700 mt-2 italic">"${note.notes.substring(0, 80)}..."</p>
@@ -6300,5 +6300,6 @@
     </script>
 </body>
 </html>
+
 
 
