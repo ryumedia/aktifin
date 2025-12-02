@@ -3760,36 +3760,39 @@
             const studentId = reportFilterStudentSelect.value;
             
             if (!startDate || !endDate) {
-                 alert('Pilih rentang tanggal terlebih dahulu.');
-                 return;
+                    alert('Pilih rentang tanggal terlebih dahulu.');
+                    return;
             }
             
             downloadReportBtn.disabled = true;
             downloadReportBtn.textContent = 'Membuat Excel...';
 
+            // Logika Filter
             let studentIdsToFilter = [];
             let filterName = 'Semua Murid';
 
             if (studentId) {
                 studentIdsToFilter = [studentId];
+                // Ambil teks nama murid dari dropdown
                 filterName = reportFilterStudentSelect.options[reportFilterStudentSelect.selectedIndex].text.split('(')[0].trim();
             } else if (classId) {
+                // Ambil murid dari variabel global reportDashboardStudents
                 studentIdsToFilter = reportDashboardStudents
                     .filter(s => s.class_id && s.class_id.toString() === classId)
                     .map(s => s.id);
                 filterName = reportFilterClassSelect.options[reportFilterClassSelect.selectedIndex].text;
             } else {
-                 studentIdsToFilter = reportDashboardStudents.map(s => s.id);
+                    studentIdsToFilter = reportDashboardStudents.map(s => s.id);
             }
             
             if (studentIdsToFilter.length === 0) {
-                 alert('Tidak ada murid yang terfilter untuk diekspor.');
-                 downloadReportBtn.disabled = false;
-                 downloadReportBtn.textContent = 'Download Excel';
-                 return;
+                    alert('Tidak ada murid yang terfilter untuk diekspor.');
+                    downloadReportBtn.disabled = false;
+                    downloadReportBtn.textContent = 'Download Excel';
+                    return;
             }
             
-            // 1. Ambil data submission lengkap (students_activities)
+            // 1. Ambil data submission lengkap
             const { data: submissions, error: subError } = await supabaseClient
                 .from('students_activities')
                 .select(`
@@ -3805,26 +3808,34 @@
                 .order('users(name)', { ascending: true });
                 
             if (subError) {
-                 alert(`Gagal mengambil data laporan: ${subError.message}`);
-                 downloadReportBtn.disabled = false;
-                 downloadReportBtn.textContent = 'Download Excel';
-                 return;
+                    alert(`Gagal mengambil data laporan: ${subError.message}`);
+                    downloadReportBtn.disabled = false;
+                    downloadReportBtn.textContent = 'Download Excel';
+                    return;
             }
 
-            // 2. Format Data untuk Excel
+            if (!submissions || submissions.length === 0) {
+                alert('Tidak ada data aktivitas pada rentang tanggal tersebut.');
+                downloadReportBtn.disabled = false;
+                downloadReportBtn.textContent = 'Download Excel';
+                return;
+            }
+
+            // 2. Format Data untuk Excel (Versi Aman dengan Optional Chaining ?.)
             const reportData = submissions.map(s => ({
                 'Tanggal Aktivitas': s.activity_date,
-                'Nama Murid': s.users.name,
-                'Aktivitas Utama': s.sub_activities.activities.activity_name,
-                'Sub Aktivitas': s.sub_activities.sub_activity_name,
+                'Nama Murid': s.users?.name || 'User Dihapus',
+                'Aktivitas Utama': s.sub_activities?.activities?.activity_name || 'Aktivitas Dihapus',
+                'Sub Aktivitas': s.sub_activities?.sub_activity_name || '-',
                 'Poin Dicapai': s.points
             }));
             
+            // 3. Buat File Excel
             const ws = XLSX.utils.json_to_sheet(reportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Aktivitas");
 
-            // 3. Simpan File
+            // Simpan File
             const fileName = `Laporan_Aktivitas_${filterName}_${startDate}_to_${endDate}.xlsx`;
             XLSX.writeFile(wb, fileName);
             
@@ -5850,6 +5861,7 @@
         
         // --- HANDLER REPORT DASHBOARD BARU ---
         if(applyReportFilterBtn) applyReportFilterBtn.addEventListener('click', fetchReportDashboardData);
+        if(downloadReportBtn) downloadReportBtn.addEventListener('click', downloadReportExcel);
 
         if(reportFilterClassSelect) {
             reportFilterClassSelect.addEventListener('change', (e) => {
