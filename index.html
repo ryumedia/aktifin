@@ -1083,6 +1083,35 @@
         </div>
     </div>
 
+    <!-- Modal: Detail Laporan Harian (View Only) -->
+    <div id="daily-report-detail-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-0 flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="p-4 bg-green-600 rounded-t-xl flex justify-between items-center text-white">
+                <div>
+                    <h3 class="font-bold text-lg">Detail Aktivitas</h3>
+                    <p id="detail-modal-date" class="text-xs opacity-90">Senin, 12 Oktober 2023</p>
+                </div>
+                <div class="text-right">
+                    <span id="detail-modal-total-points" class="block font-bold text-xl">0</span>
+                    <span class="text-xs">Poin</span>
+                </div>
+            </div>
+            
+            <!-- List Container -->
+            <div id="detail-modal-list" class="p-4 overflow-y-auto space-y-4 flex-grow bg-gray-50">
+                <p class="text-center text-gray-500 py-4">Memuat data...</p>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-gray-200 text-center bg-white rounded-b-xl">
+                <button onclick="document.getElementById('daily-report-detail-modal').classList.add('hidden')" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 w-full">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Tambah/Edit Sub Aktivitas -->
     <div id="sub-activity-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
@@ -2945,7 +2974,7 @@
             selectEl.innerHTML = html;
         }
         
-        // FUNGSI: Mengambil dan merender status laporan harian
+        // FUNGSI UPDATE: Mengambil dan merender status laporan harian dengan Poin & Klik
         async function fetchReportStatus() {
             const userId = targetStudentId;
             if (!userId) {
@@ -2966,9 +2995,10 @@
             const startDate = formatDateLocal(firstDayOfMonth);
             const endDate = formatDateLocal(lastDayOfMonth);
             
+            // UPDATE QUERY: Tambahkan 'points' ke dalam select
             const { data: submissions, error } = await supabaseClient
                 .from('students_activities')
-                .select('activity_date')
+                .select('activity_date, points') // <--- UPDATE DISINI
                 .eq('student_id', userId)
                 .gte('activity_date', startDate)
                 .lte('activity_date', endDate);
@@ -2978,7 +3008,14 @@
                 return;
             }
 
-            const submittedDates = new Set(submissions.map(s => s.activity_date));
+            // UPDATE LOGIC: Grouping data per tanggal untuk menghitung total poin
+            const dailyData = {}; 
+            submissions.forEach(sub => {
+                if (!dailyData[sub.activity_date]) {
+                    dailyData[sub.activity_date] = { submitted: true, totalPoints: 0 };
+                }
+                dailyData[sub.activity_date].totalPoints += sub.points;
+            });
 
             let listHTML = '';
             const todayISO = formatDateLocal(new Date()); 
@@ -2991,27 +3028,49 @@
                 const dayOfWeek = date.toLocaleDateString('id-ID', { weekday: 'long' }); 
                 
                 let statusText = 'Belum kirim laporan';
-                let statusClass = 'text-red-600 bg-red-100';
+                let statusClass = 'text-red-600 bg-red-50 border border-red-100';
                 let icon = '<i class="fas fa-times-circle"></i>';
+                let pointBadge = '';
+                let isClickable = false;
 
-                if (submittedDates.has(dateString)) {
-                    statusText = 'Sudah kirim laporan';
-                    statusClass = 'text-green-600 bg-green-100';
+                // Cek apakah tanggal ini ada datanya
+                if (dailyData[dateString]) {
+                    statusText = 'Laporan Terkirim';
+                    statusClass = 'text-green-700 bg-green-50 border border-green-200';
                     icon = '<i class="fas fa-check-circle"></i>';
+                    
+                    // Tampilkan Poin
+                    pointBadge = `<div class="mt-1 text-xs font-bold text-green-800 bg-green-200 px-2 py-0.5 rounded-full inline-block">
+                                    +${dailyData[dateString].totalPoints} Poin
+                                </div>`;
+                    isClickable = true;
                 } else if (dateString > todayISO) {
                     statusText = 'Belum tiba';
-                    statusClass = 'text-gray-600 bg-gray-200';
+                    statusClass = 'text-gray-400 bg-gray-100 border border-gray-200';
                     icon = '<i class="fas fa-calendar-alt"></i>';
+                    isClickable = false;
+                } else {
+                    // Tanggal lewat tapi belum kirim (tetap bisa diklik untuk lihat form kosong/missed)
+                    statusText = 'Tidak Mengisi';
+                    isClickable = true; 
                 }
                 
+                // Tambahkan event onclick jika clickable
+                const clickAction = isClickable ? `onclick="showDailyReportDetail('${dateString}')"` : '';
+                const cursorClass = isClickable ? 'cursor-pointer hover:bg-gray-50 transition-colors' : 'cursor-default';
+
                 listHTML += `
-                    <div class="flex justify-between items-center p-4 rounded-lg shadow-sm border border-gray-200 bg-white">
+                    <div class="flex justify-between items-center p-3 rounded-lg shadow-sm border-b border-gray-100 bg-white ${cursorClass}" ${clickAction}>
                         <div>
-                            <p class="font-semibold text-gray-800">${dayOfMonth} ${monthNames[month]} <span class="text-sm font-normal text-gray-500">(${dayOfWeek})</span></p>
+                            <p class="font-semibold text-gray-800 text-sm">${dayOfMonth} ${monthNames[month]} <span class="font-normal text-gray-500 text-xs">(${dayOfWeek})</span></p>
+                            ${pointBadge}
                         </div>
-                        <div class="text-xs font-bold px-3 py-1 rounded-full ${statusClass} flex items-center gap-2">
-                            ${icon}
-                            <span>${statusText}</span>
+                        <div class="text-right">
+                            <div class="text-xs font-bold px-3 py-1.5 rounded-lg ${statusClass} flex items-center justify-end gap-2">
+                                ${icon}
+                                <span>${statusText}</span>
+                            </div>
+                            ${isClickable ? '<p class="text-[10px] text-gray-400 mt-1">Ketuk untuk detail <i class="fas fa-chevron-right ml-1"></i></p>' : ''}
                         </div>
                     </div>
                 `;
@@ -6308,6 +6367,114 @@
             nextMonthBtn.addEventListener('click', () => changeReportMonth(1));
         }
         
+        // FUNGSI BARU: Menampilkan Detail Laporan Harian (Checked vs Unchecked)
+        window.showDailyReportDetail = async function(dateStr) {
+            const modal = document.getElementById('daily-report-detail-modal');
+            const container = document.getElementById('detail-modal-list');
+            const headerDate = document.getElementById('detail-modal-date');
+            const headerPoints = document.getElementById('detail-modal-total-points');
+
+            // UI Loading
+            modal.classList.remove('hidden');
+            container.innerHTML = '<div class="flex flex-col items-center justify-center py-10"><i class="fas fa-spinner fa-spin text-green-600 text-2xl mb-2"></i><span class="text-gray-500">Memuat detail aktivitas...</span></div>';
+            headerPoints.textContent = '0';
+            
+            // Format Tanggal Header
+            const dateObj = new Date(dateStr);
+            headerDate.textContent = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+            // 1. Ambil Data Master Aktivitas (Strukturnya)
+            // Kita reuse logika filter activity agar sesuai dengan kelas siswa saat ini
+            const { data: rawActivities } = await supabaseClient
+                .from('activities')
+                .select(`
+                    id, activity_name, 
+                    activity_class_map!left(class_id),
+                    sub_activities!inner(id, sub_activity_name, points, status, main)
+                `)
+                .eq('status', 'active')
+                .order('id');
+            
+            // Filter Aktivitas sesuai Kelas Siswa (Logika yang sama dengan input form)
+            // Asumsi: studentClassId sudah ter-set global saat login/filter
+            const filteredMasterActivities = (rawActivities || []).map(act => ({
+                ...act,
+                sub_activities: act.sub_activities.filter(sub => sub.status === 'active')
+            })).filter(act => {
+                if (!act.sub_activities.length) return false;
+                const maps = act.activity_class_map;
+                if (!maps || maps.length === 0) return true; // Universal
+                return maps.some(m => m.class_id === studentClassId);
+            });
+
+            // 2. Ambil Data Submission Siswa pada Tanggal Tersebut
+            const { data: submissions } = await supabaseClient
+                .from('students_activities')
+                .select('sub_activity_id, points')
+                .eq('student_id', targetStudentId)
+                .eq('activity_date', dateStr);
+
+            // Buat Set ID yang sudah dikerjakan untuk lookup cepat
+            const submittedSet = new Set(submissions?.map(s => s.sub_activity_id));
+            
+            // Hitung Total Poin Hari Itu
+            const totalPoints = submissions?.reduce((sum, s) => sum + s.points, 0) || 0;
+            headerPoints.textContent = totalPoints;
+
+            // 3. Render List (Checked vs Unchecked)
+            let html = '';
+            
+            if (filteredMasterActivities.length === 0) {
+                html = '<p class="text-center text-gray-500">Tidak ada konfigurasi aktivitas untuk kelas ini.</p>';
+            } else {
+                filteredMasterActivities.forEach(activity => {
+                    let subListHtml = '';
+                    
+                    activity.sub_activities.forEach(sub => {
+                        const isChecked = submittedSet.has(sub.id);
+                        
+                        // Style Berbeda untuk yang Dikerjakan vs Tidak
+                        const bgClass = isChecked ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100 opacity-60';
+                        const icon = isChecked 
+                            ? '<i class="fas fa-check-circle text-green-600 text-lg"></i>' 
+                            : '<div class="w-5 h-5 rounded-full border-2 border-gray-300"></div>';
+                        const textClass = isChecked ? 'text-gray-800 font-medium' : 'text-gray-500';
+                        const pointsBadge = isChecked
+                            ? `<span class="text-xs font-bold text-green-700">+${sub.points}</span>`
+                            : `<span class="text-xs text-gray-400">${sub.points} pts</span>`;
+
+                        subListHtml += `
+                            <div class="flex items-center gap-3 p-2 rounded-lg border ${bgClass} mb-2">
+                                <div class="flex-shrink-0">${icon}</div>
+                                <div class="flex-grow ${textClass} text-sm">${sub.sub_activity_name}</div>
+                                <div class="flex-shrink-0">${pointsBadge}</div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                        <div class="mb-4">
+                            <h4 class="font-bold text-gray-700 mb-2 text-sm uppercase tracking-wide border-b pb-1">${activity.activity_name}</h4>
+                            <div>${subListHtml}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            if (submissions && submissions.length === 0 && new Date(dateStr) < new Date()) {
+                html = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center mb-4">
+                        <i class="fas fa-times-circle text-red-500 text-3xl mb-2"></i>
+                        <p class="text-red-700 font-bold">Tidak ada laporan masuk.</p>
+                        <p class="text-xs text-red-600">Siswa tidak mengirimkan laporan aktivitas pada tanggal ini.</p>
+                    </div>
+                    ${html}
+                `;
+            }
+
+            container.innerHTML = html;
+        };
+
     </script>
 </body>
 </html>
