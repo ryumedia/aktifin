@@ -69,9 +69,64 @@
             transform: scaleY(1);
             height: auto;
         }
+
+        /* Lightbox Modal CSS */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            padding-top: 60px; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.9);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 100%;
+            max-width: 450px;
+            /* Ubah max-width di atas untuk mengatur lebar pop-up (default: 300px) */
+        }
+
+        .modal-content {
+            animation-name: zoom;
+            animation-duration: 0.6s;
+        }
+
+        @keyframes zoom {
+            from {transform:scale(0)} 
+            to {transform:scale(1)}
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="flex justify-center min-h-screen">
+
+    <!-- The Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
 
     <!-- Main Mobile Container (max-w-lg) -->
     <main class="w-full max-w-lg bg-white shadow-2xl relative overflow-hidden min-h-screen pb-24">
@@ -160,7 +215,7 @@
         <section id="fitur" class="px-6 py-12 bg-slate-50">
             <div class="text-center mb-10">
                 <h2 class="text-2xl font-bold text-slate-900">Fitur Unggulan</h2>
-                <p class="text-slate-500 text-sm mt-2">Didesain khusus untuk efisiensi Siswa dan Orang Tua dan Guru.</p>
+                <p class="text-slate-500 text-lg mt-2">Efisensi Laporan Siswa, untuk Orang Tua dan Guru.</p>
             </div>
 
             <div class="space-y-16">
@@ -170,8 +225,8 @@
                         <div class="w-10 h-10 bg-[#18a34a]/10 text-[#18a34a] rounded-lg flex items-center justify-center mb-2">
                             <i data-lucide="send" class="w-5 h-5"></i>
                         </div>
-                        <h3 class="font-bold text-slate-800 text-lg">Easy Report</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed">
+                        <h3 class="font-bold text-slate-800 text-2xl">Easy Report</h3>
+                        <p class="text-base text-slate-500 leading-relaxed">
                             Memudahkan siswa dan orang tua untuk melaporkan aktifitas harian tanpa ribet, hanya dengan tap-tap dan kirim.
                         </p>
                     </div>
@@ -180,7 +235,8 @@
                         <img 
                             src="https://i.imghippo.com/files/IgOz6890MgM.png" 
                             alt="Fitur Scan" 
-                            class="rounded-xl shadow-lg border-4 border-white w-full h-auto object-cover"
+                            class="rounded-xl shadow-lg border-4 border-white w-full h-auto object-cover cursor-pointer"
+                            onclick="openModal(this)"
                         >
                     </div>
                 </div>
@@ -191,8 +247,8 @@
                         <div class="w-10 h-10 bg-[#18a34a]/10 text-[#18a34a] rounded-lg flex items-center justify-center mb-2 ml-auto">
                             <i data-lucide="clock-check" class="w-5 h-5"></i>
                         </div>
-                        <h3 class="font-bold text-slate-800 text-lg">Real-time Connection</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed">
+                        <h3 class="font-bold text-slate-800 text-2xl">Real-time Connection</h3>
+                        <p class="text-base text-slate-500 leading-relaxed">
                             Laporan Perkembangan membaca siswa tersampaikan real-time dari guru ke orang tua. Tanpa harus menanyakan kepada anak, laporan langsung bisa dilihat.
                         </p>
                     </div>
@@ -201,7 +257,8 @@
                         <img 
                             src="https://i.imghippo.com/files/xZJw7715EE.png" 
                             alt="Fitur Tracking" 
-                            class="rounded-xl shadow-lg border-4 border-white w-full h-auto object-cover"
+                            class="rounded-xl shadow-lg border-4 border-white w-full h-auto object-cover cursor-pointer"
+                            onclick="openModal(this)"
                         >
                     </div>
                 </div>
@@ -212,8 +269,8 @@
                         <div class="w-10 h-10 bg-[#18a34a]/10 text-[#18a34a] rounded-lg flex items-center justify-center mb-2">
                             <i data-lucide="circle-check-big" class="w-5 h-5"></i>
                         </div>
-                        <h3 class="font-bold text-slate-800 text-lg">Full Control</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed">
+                        <h3 class="font-bold text-slate-800 text-2xl">Full Control</h3>
+                        <p class="text-base text-slate-500 leading-relaxed">
                             Tak perlu khawatir lupa mengirim laporan harian. Fitur rekap laporan tersedia dengan keterangan sudah kirim dan belum kirim.
                         </p>
                     </div>
@@ -222,7 +279,8 @@
                         <img 
                             src="https://i.imghippo.com/files/kd7057LQ.png" 
                             alt="Fitur Laporan" 
-                            class="rounded-xl shadow-lg border-4 border-white w-full h-auto object-cover"
+                            class="rounded-xl shadow-lg border-4 border-white w-full h-auto object-cover cursor-pointer"
+                            onclick="openModal(this)"
                         >
                     </div>
                 </div>
@@ -233,8 +291,8 @@
                         <div class="w-10 h-10 bg-[#18a34a]/10 text-[#18a34a] rounded-lg flex items-center justify-center mb-2 ml-auto">
                             <i data-lucide="chart-no-axes-combined" class="w-5 h-5"></i>
                         </div>
-                        <h3 class="font-bold text-slate-800 text-lg">Accurate Result</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed">
+                        <h3 class="font-bold text-slate-800 text-2xl">Accurate Result</h3>
+                        <p class="text-base text-slate-500 leading-relaxed">
                             Hasil yang akurat dengan persentase setiap bulannya. Tak perlu khawatir tentang kesalahan hitung. Orang tua bisa melihat sendiri hasil persentase capaian aktifitas harian.
                         </p>
                     </div>
@@ -243,7 +301,8 @@
                         <img 
                             src="https://i.imghippo.com/files/WLkb1846mzI.png" 
                             alt="Fitur Tracking" 
-                            class="rounded-xl shadow-lg border-4 border-white w-full h-auto object-cover"
+                            class="rounded-xl shadow-lg border-4 border-white w-full h-auto object-cover cursor-pointer"
+                            onclick="openModal(this)"
                         >
                     </div>
                 </div>
@@ -254,7 +313,7 @@
         <section class="bg-slate-900 text-white py-16 px-6 rounded-3xl mx-2 my-8 relative overflow-hidden">
             <div class="relative z-10">
                 <h2 class="text-2xl font-bold mb-4">Dashboard Admin Powerful</h2>
-                <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                <p class="text-slate-400 text-base mb-8 leading-relaxed">
                     Guru bisa melihat capaian per siswa per kelas bahkan seluruh sekolah. Atur kegiatan dan buku bacaan siswa. Cetak Laporan tanpa ribet.
                 </p>
 
@@ -264,7 +323,8 @@
                     <img 
                         src="https://i.imghippo.com/files/Io8531ySI.png" 
                         alt="Dashboard Admin" 
-                        class="w-full h-auto object-cover"
+                        class="w-full h-auto object-cover cursor-pointer"
+                        onclick="openModal(this)"
                     >
                 </div>
             </div>
@@ -274,15 +334,15 @@
 
         <!-- Keunggulan Section -->
         <section id="keunggulan" class="px-6 pb-12 pt-8">
-            <h2 class="text-xl font-bold text-slate-900 mb-6 border-l-4 border-[#18a34a] pl-3">Keunggulan</h2>
+            <h2 class="text-2xl font-bold text-slate-900 mb-6 border-l-4 border-[#18a34a] pl-3">Keunggulan</h2>
             <div class="space-y-4">
                 <div class="flex gap-4 items-start bg-white p-4 rounded-xl shadow-sm border border-slate-100">
                     <div class="w-10 h-10 bg-[#18a34a]/10 rounded-lg flex items-center justify-center text-[#18a34a] flex-shrink-0">
                         <i data-lucide="zap" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-sm">Real-time Sync</h3>
-                        <p class="text-xs text-slate-500 mt-1">Data tersinkronisasi otomatis antara aplikasi mobile dan CMS desktop.</p>
+                        <h3 class="font-bold text-slate-800 text-xl">Real-time Sync</h3>
+                        <p class="text-lg text-slate-500 mt-1">Data tersinkronisasi otomatis antara aplikasi mobile dan CMS desktop.</p>
                     </div>
                 </div>
                  <div class="flex gap-4 items-start bg-white p-4 rounded-xl shadow-sm border border-slate-100">
@@ -290,8 +350,8 @@
                         <i data-lucide="shield-check" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-sm">Keamanan Data</h3>
-                        <p class="text-xs text-slate-500 mt-1">Penyimpanan data dan server profesional untuk memastikan data Anda aman.</p>
+                        <h3 class="font-bold text-slate-800 text-xl">Keamanan Data</h3>
+                        <p class="text-lg text-slate-500 mt-1">Penyimpanan data dan server profesional untuk memastikan data Anda aman.</p>
                     </div>
                 </div>
                  <div class="flex gap-4 items-start bg-white p-4 rounded-xl shadow-sm border border-slate-100">
@@ -299,8 +359,8 @@
                         <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-sm">Mudah Rekap Laporan</h3>
-                        <p class="text-xs text-slate-500 mt-1">Laporan otomatis harian, mingguan, dan bulanan siap dicetak.</p>
+                        <h3 class="font-bold text-slate-800 text-xl">Mudah Rekap Laporan</h3>
+                        <p class="text-lg text-slate-500 mt-1">Laporan otomatis harian, mingguan, dan bulanan siap dicetak.</p>
                     </div>
                 </div>
             </div>
@@ -397,6 +457,25 @@
         }
 
         menuBtn.addEventListener('click', toggleMenu);
+
+        // Lightbox Modal Logic
+        var modal = document.getElementById("imageModal");
+        var modalImg = document.getElementById("modalImage");
+
+        function openModal(element) {
+            modal.style.display = "block";
+            modalImg.src = element.src;
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
     </script>
 </body>
 </html>
