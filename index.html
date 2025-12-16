@@ -3812,94 +3812,126 @@
             }
         }
         
+        // FUNGSI BARU: Download Excel Ringkasan Persentase (Sesuai Permintaan)
         async function downloadReportExcel() {
             const startDate = reportStartDateInput.value;
             const endDate = reportEndDateInput.value;
             const classId = reportFilterClassSelect.value;
             const studentId = reportFilterStudentSelect.value;
-            
-            if (!startDate || !endDate) {
-                    alert('Pilih rentang tanggal terlebih dahulu.');
-                    return;
-            }
-            
-            downloadReportBtn.disabled = true;
-            downloadReportBtn.textContent = 'Membuat Excel...';
 
-            // Logika Filter
+            if (!startDate || !endDate) {
+                alert('Pilih rentang tanggal terlebih dahulu.');
+                return;
+            }
+
+            downloadReportBtn.disabled = true;
+            downloadReportBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Membuat Excel...';
+
+            // 1. Tentukan Murid yang Akan Diproses
             let studentIdsToFilter = [];
+            let studentsToProcess = [];
             let filterName = 'Semua Murid';
 
             if (studentId) {
                 studentIdsToFilter = [studentId];
-                // Ambil teks nama murid dari dropdown
-                filterName = reportFilterStudentSelect.options[reportFilterStudentSelect.selectedIndex].text.split('(')[0].trim();
+                studentsToProcess = reportDashboardStudents.filter(s => s.id === studentId);
+                filterName = studentsToProcess[0]?.name || 'murid';
             } else if (classId) {
-                // Ambil murid dari variabel global reportDashboardStudents
-                studentIdsToFilter = reportDashboardStudents
-                    .filter(s => s.class_id && s.class_id.toString() === classId)
-                    .map(s => s.id);
+                studentsToProcess = reportDashboardStudents.filter(s => s.class_id && s.class_id.toString() === classId);
+                studentIdsToFilter = studentsToProcess.map(s => s.id);
                 filterName = reportFilterClassSelect.options[reportFilterClassSelect.selectedIndex].text;
             } else {
-                    studentIdsToFilter = reportDashboardStudents.map(s => s.id);
-            }
-            
-            if (studentIdsToFilter.length === 0) {
-                    alert('Tidak ada murid yang terfilter untuk diekspor.');
-                    downloadReportBtn.disabled = false;
-                    downloadReportBtn.textContent = 'Download Excel';
-                    return;
-            }
-            
-            // 1. Ambil data submission lengkap
-            const { data: submissions, error: subError } = await supabaseClient
-                .from('students_activities')
-                .select(`
-                    activity_date, 
-                    points, 
-                    users(name), 
-                    sub_activities(sub_activity_name, activity_id, activities(activity_name))
-                `)
-                .in('student_id', studentIdsToFilter)
-                .gte('activity_date', startDate)
-                .lte('activity_date', endDate)
-                .order('activity_date', { ascending: true })
-                .order('users(name)', { ascending: true });
-                
-            if (subError) {
-                    alert(`Gagal mengambil data laporan: ${subError.message}`);
-                    downloadReportBtn.disabled = false;
-                    downloadReportBtn.textContent = 'Download Excel';
-                    return;
+                studentsToProcess = reportDashboardStudents;
+                studentIdsToFilter = studentsToProcess.map(s => s.id);
             }
 
-            if (!submissions || submissions.length === 0) {
-                alert('Tidak ada data aktivitas pada rentang tanggal tersebut.');
+            if (studentIdsToFilter.length === 0) {
+                alert('Tidak ada murid yang terfilter untuk diekspor.');
                 downloadReportBtn.disabled = false;
-                downloadReportBtn.textContent = 'Download Excel';
+                downloadReportBtn.innerHTML = '<i class="fas fa-file-excel"></i> Download Excel';
                 return;
             }
 
-            // 2. Format Data untuk Excel (Versi Aman dengan Optional Chaining ?.)
-            const reportData = submissions.map(s => ({
-                'Tanggal Aktivitas': s.activity_date,
-                'Nama Murid': s.users?.name || 'User Dihapus',
-                'Aktivitas Utama': s.sub_activities?.activities?.activity_name || 'Aktivitas Dihapus',
-                'Sub Aktivitas': s.sub_activities?.sub_activity_name || '-',
-                'Poin Dicapai': s.points
+            // 2. Ambil Semua Aktivitas Utama yang Relevan
+            const { data: allActivities, error: activityError } = await supabaseClient
+                .from('activities')
+                .select(`id, activity_name, sub_activities!inner(points, status)`)
+                .eq('status', 'active')
+                .eq('sub_activities.status', 'active');
+
+            if (activityError) {
+                alert(`Gagal mengambil data aktivitas: ${activityError.message}`);
+                downloadReportBtn.disabled = false;
+                downloadReportBtn.innerHTML = '<i class="fas fa-file-excel"></i> Download Excel';
+                return;
+            }
+
+            // 3. Ambil Semua Laporan (Submission) dalam Rentang Tanggal
+            const { data: allSubmissions, error: subError } = await supabaseClient
+                .from('students_activities')
+                .select('student_id, points, sub_activities!inner(activity_id)')
+                .in('student_id', studentIdsToFilter)
+                .gte('activity_date', startDate)
+                .lte('activity_date', endDate);
+
+            if (subError) {
+                alert(`Gagal mengambil data laporan: ${subError.message}`);
+                downloadReportBtn.disabled = false;
+                downloadReportBtn.innerHTML = '<i class="fas fa-file-excel"></i> Download Excel';
+                return;
+            }
+
+            // 4. Proses Data untuk Setiap Murid
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const daysInRange = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            const reportData = [];
+
+            for (const student of studentsToProcess) {
+                let studentRow = {
+                    'Nama': student.name,
+                    'Kelas': student.class_name || '-',
+                };
+
+                // Filter laporan hanya untuk murid ini
+                const studentSubmissions = allSubmissions.filter(s => s.student_id === student.id);
+
+                for (const activity of allActivities) {
+                    // Hitung Poin Maksimal untuk aktivitas ini
+                    const maxDailyPoints = activity.sub_activities.reduce((sum, sub) => sum + sub.points, 0);
+                    const maxTotalPoints = maxDailyPoints * daysInRange;
+
+                    // Hitung Poin Tercapai untuk aktivitas ini
+                    const achievedPoints = studentSubmissions
+                        .filter(s => s.sub_activities.activity_id === activity.id)
+                        .reduce((sum, s) => sum + s.points, 0);
+
+                    // Hitung Persentase
+                    const percentage = maxTotalPoints > 0 ? (achievedPoints / maxTotalPoints) * 100 : 0;
+                    
+                    // Tambahkan ke baris siswa dengan format persentase
+                    studentRow[activity.activity_name] = `${percentage.toFixed(1)}%`;
+                }
+                reportData.push(studentRow);
+            }
+
+            // 5. Tambahkan Nomor Urut di Depan
+            const finalReportData = reportData.map((row, index) => ({
+                'No': index + 1,
+                ...row
             }));
-            
-            // 3. Buat File Excel
+
+            // 6. Buat File Excel
             const ws = XLSX.utils.json_to_sheet(reportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Aktivitas");
 
             // Simpan File
-            const fileName = `Laporan_Aktivitas_${filterName}_${startDate}_to_${endDate}.xlsx`;
+            const fileName = `Ringkasan_Persentase_${filterName}_${startDate}_sd_${endDate}.xlsx`;
             XLSX.writeFile(wb, fileName);
-            
+
             downloadReportBtn.disabled = false;
-            downloadReportBtn.textContent = 'Download Excel';
+            downloadReportBtn.innerHTML = '<i class="fas fa-file-excel"></i> Download Excel';
         }
 
         // FUNGSI BARU: Download Laporan PDF
