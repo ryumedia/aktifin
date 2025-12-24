@@ -2833,6 +2833,9 @@
             
             const studentId = targetStudentId;
             
+            // Ambil user yang sedang login untuk dicatat sebagai pengisi data
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            
             const payload = {
                 student_id: studentId,
                 date: formData.get('date'),
@@ -2840,6 +2843,7 @@
                 page: formData.get('page'),
                 marks: formData.get('marks'),
                 notes: formData.get('notes'),
+                submitted_by: user ? user.id : null // Simpan ID pengisi
             };
 
             const { error } = await supabaseClient
@@ -2870,11 +2874,13 @@
             readingActivitiesFeed.innerHTML = '<p class="text-center text-gray-500 text-sm">Memuat data...</p>';
 
             // UPDATE QUERY: Tambahkan relasi ke tabel books
+            // UPDATE QUERY: Tambahkan relasi ke tabel books DAN users (sebagai submitter)
             const { data: activities, error: activityError } = await supabaseClient
                 .from('reading_activities')
                 .select(`
                     *,
-                    books (book_name)  
+                    books (book_name),
+                    submitter:users!submitted_by (name)
                 `)
                 .eq('student_id', userId)
                 .order('date', { ascending: false }); 
@@ -2896,6 +2902,9 @@
                     // UPDATE: Ambil judul dari objek relasi 'books'
                     // Jika buku dihapus (null), tampilkan fallback text
                     const bookName = activity.books ? activity.books.book_name : 'Judul Buku Tidak Ditemukan';
+                    
+                    // Ambil nama pengisi data (submitter)
+                    const submitterName = activity.submitter ? activity.submitter.name : 'Pengguna';
 
                     const card = `
                         <div class="border border-gray-200 rounded-lg p-4 transition-shadow hover:shadow-md bg-white">
@@ -2909,7 +2918,8 @@
                                 <p class="text-sm font-medium text-green-800">Catatan:</p>
                                 <p class="text-sm text-gray-700">"${activity.notes || '-'}"</p>
                             </div>
-                            <div class="flex justify-end mt-3">
+                            <div class="flex justify-between items-center mt-3">
+                                <span class="text-[10px] text-gray-400 italic"><i class="fas fa-user-edit mr-1"></i>Oleh: ${submitterName}</span>
                                 <span class="text-green-700 bg-green-100 text-xs font-bold px-2 py-0.5 rounded-full">Tanda: ${activity.marks || '-'}</span>
                             </div>
                         </div>
